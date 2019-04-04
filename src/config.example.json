@@ -1,0 +1,9 @@
+{
+    "runParallel": false,
+    "loglevel": "INFO",
+    "qlikEngineContainer": "qlikcore/engine:12.345.0",
+    "reportingEngineContainer": "senseexcel/ser-engine",
+    "reportingEngineStartPort": 15486,
+    "tests": [],
+    "removeDockerEnviroment": true
+}

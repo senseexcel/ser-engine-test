@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "umd",
+        "target": "es6",
+        "declaration": false,
+        "sourceMap": true,
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "noResolve": false,
+    },
+    "include": [
+        "src/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

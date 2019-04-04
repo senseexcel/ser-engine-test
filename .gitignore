@@ -1,3 +1,11 @@
+package-lock.json
+config.json
+*.js
+*.map
+*.zip
+output
+assets
+
 # Logs
 logs
 *.log
