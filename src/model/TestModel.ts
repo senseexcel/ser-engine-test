@@ -98,8 +98,8 @@ export class TestModel {
         return new Promise<string>((resolve, reject) => {
             let options = {
                 headers: {
-                    "serfilename": "upload.zip",
-                    "serunzip": true,
+                    "filename": "upload.zip",
+                    "unzip": true,
                     "Content-Type": "application/octet-stream"
                 }
             }
@@ -197,7 +197,7 @@ export class TestModel {
         return new Promise<IFileResponse>((resolve, reject) => {
             let options = {
                 headers: {
-                    "serfilename": filename
+                    "filename": filename
                 }
             }
             let req = get(`http://localhost:${this.port}/api/v1/file/${id}`, options);
@@ -208,7 +208,7 @@ export class TestModel {
             req.on("complete", () => {
                 resolve({
                     buffer: Buffer.concat(bufferArray),
-                    name: name
+                    name: `${name}.${filename.split(".").slice(-1)[0]}`
                 });
             })
             req.on("error", (err) => {
