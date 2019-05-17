@@ -5,5 +5,6 @@
     "reportingEngineContainer": "senseexcel/ser-engine:0.0.5-alpha",
     "reportingEngineStartPort": 15486,
     "tests": [],
-    "removeDockerEnviroment": true
+    "removeDockerEnviroment": true,
+    "testPath": "./assets"
 }

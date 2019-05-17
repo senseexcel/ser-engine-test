@@ -6,4 +6,5 @@ export interface IConfig {
     reportingEngineStartPort: number;
     tests: string[];
     removeDockerEnviroment: boolean;
+    testPath: string;
 }

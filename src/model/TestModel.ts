@@ -78,7 +78,7 @@ export class TestModel {
                     return;
                 }
                 for (const file of files) {
-                    if (file.indexOf("\.xlsx") > 0 || file.indexOf("\.ttf") > 0) {
+                    if (file.indexOf("\.xlsx") > 0 || file.indexOf("\.ttf") > 0 || file.indexOf("\.key") > 0) {
                         try {
                             zip.addLocalFile(`${this.templatePath}${file}`);
                         } catch (error) {

@@ -18,7 +18,7 @@ export class TestController {
     //#region VARIABLES
     private logger: Logger = null;
     private results: ResultModel[] = [];
-    private rootPath = "./src/assets/";
+    private rootPath = config.testPath;
     //#endregion
 
     constructor() {
