@@ -142,6 +142,7 @@ export class TestController {
         const port = basePort;
         let result: ResultModel[] = [];
         const dockerController: DockerController = new DockerController(`${this.rootPath}${name}`);
+        await dockerController.init();
         this.logger.info("running test: ", name);
         const qvfFiles = await this.getQlikApplicationFiles(name);
         let successfullyCreatedEnv = await dockerController.createEnviroment(port, qvfFiles);

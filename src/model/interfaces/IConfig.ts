@@ -7,4 +7,7 @@ export interface IConfig {
     tests: string[];
     removeDockerEnviroment: boolean;
     testPath: string;
+    useLocalRest: boolean;
+    enginePath: string;
+    cpuCount: number;
 }

@@ -1,5 +1,7 @@
 import { getFilesFromType, loadFile } from "../lib/fileUtils";
 import { ITestError, ResultModel, ITestResult } from "./ResultModel";
+import { IConfig } from "./interfaces/IConfig";
+let config: IConfig = require("../config.json");
 
 interface IResult {
     name: string;
@@ -10,7 +12,7 @@ export class CompareModel {
 
     private testName: string;
     private filetype: string;
-    private rootPath: string = "./src/assets/"
+    private rootPath: string = config.testPath;
     private resultModel: ResultModel;
 
     public numberOfResultFiles: number

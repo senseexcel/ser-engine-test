@@ -18,6 +18,7 @@ export class DockerController {
     private qlikContainerName: string = "";
     private serContainerName: string = "";
     private testPath: string = "";
+    private engineLocalTag: string = "";
     //#endregion
 
     constructor(testPath: string) {
@@ -98,9 +99,11 @@ export class DockerController {
             const cmd = ["docker container create",
                 `--network ${this.networkName}`,
                 `--name ${name}`,
-                `--cpus="1"`,
+                `--cpus="${config.cpuCount}"`,
                 `-p ${port}:80`,
-                config.reportingEngineContainer];
+                config.useLocalRest?`senseexcel/ser-engine:${this.engineLocalTag}`:config.reportingEngineContainer];
+
+            this.logger.debug("cmd for create ser container: ", cmd.join(" "));
 
             exec(cmd.join(" "), (err) => {
                 if (err) {
@@ -196,6 +199,24 @@ export class DockerController {
         });
     }
 
+    private async createRestContainer(): Promise<void> {
+        if (config.useLocalRest) {
+            return new Promise<void>((resolve, reject) => {
+                const tag = "serRestServiceLocal";
+                this.logger.debug("Create Docker Image: ", tag);
+                exec(`docker build -t senseexcel/ser-engine:${tag} ${config.enginePath}`, (err) => {
+                    if (err) {
+                        this.logger.debug(err);
+                        reject(err);
+                    }
+                    this.engineLocalTag = tag;
+                    resolve();
+                })
+            });
+        }
+        return;
+    }
+
     public async copyLogFile(): Promise<void> {
         this.logger.debug("Copy log from ser");
         return new Promise<void>((resolve, reject) => {
@@ -271,6 +292,11 @@ export class DockerController {
             this.logger.error(error);
             return false;
         }
+    }
+
+    public async init(): Promise<void> {
+        await this.createRestContainer();
+        return;
     }
 
     //#endregion

@@ -6,5 +6,8 @@
     "reportingEngineStartPort": 15486,
     "tests": [],
     "removeDockerEnviroment": true,
-    "testPath": "./assets"
+    "testPath": "./assets",
+    "useLocalRest": true,
+    "enginePath": "./src/assets/engine/",
+    "cpuCount": 1
 }

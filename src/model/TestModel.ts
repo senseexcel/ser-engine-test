@@ -41,7 +41,7 @@ export class TestModel {
 
         this.job = job;
         this.testName = testName;
-        this.templatePath = `./src/assets/${testName}/`;
+        this.templatePath = `${config.testPath}/${testName}/`;
         this.resultModel = resultModel;
 
         try {
@@ -316,7 +316,7 @@ export class TestModel {
             let fileResponses: IFileResponse[] = await Promise.all(arr);
 
             for (const fileResponse of fileResponses) {
-                writeFileSync(`./src/assets/${this.testName}/output/${fileResponse.name}`, fileResponse.buffer);
+                writeFileSync(`${config.testPath}/${this.testName}/output/${fileResponse.name}`, fileResponse.buffer);
             }
             this.logger.trace("File saved");
 
