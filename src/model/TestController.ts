@@ -38,11 +38,11 @@ export class TestController {
         this.logger.trace("in getAvailableTests");
         try {
             const availableTests = await getFiles(rootPath);
-            if (typeof(config.tests) === "undefined" || config.tests.length === 0) {
+            if (typeof (config.tests) === "undefined" || config.tests.length === 0) {
                 return availableTests;
             }
             const relevantTests = availableTests.filter((current) => {
-                return config.tests.indexOf(current)>-1?true:false;
+                return config.tests.indexOf(current) > -1 ? true : false;
             })
             return relevantTests;
         } catch (error) {
@@ -137,35 +137,53 @@ export class TestController {
     }
 
     private async run(basePort: number, name: string): Promise<ResultModel[]> {
+
         this.logger.trace("in run");
         await removeAllFilesInFolder(`${this.rootPath}${name}/output`);
         const port = basePort;
         let result: ResultModel[] = [];
         const dockerController: DockerController = new DockerController(`${this.rootPath}${name}`);
-        await dockerController.init();
+        const successInit = await dockerController.init();
         this.logger.info("running test: ", name);
-        const qvfFiles = await this.getQlikApplicationFiles(name);
-        let successfullyCreatedEnv = await dockerController.createEnviroment(port, qvfFiles);
-        await delay(10000);
 
-        if (successfullyCreatedEnv) {
-            this.logger.trace("qvf's uploaded to docker container");
-            let res = await this.runTest(name, port);
-            this.logger.info(res.getResults())
-            result.push(res);
+        if (!successInit) {
+            throw "Error while building Enviroment";
         }
+
 
         try {
-            await delay(1000);
-            await dockerController.copyLogFile();
-        } catch (error) {
-            this.logger.error("copy of log faild", error);
-        }
 
-        if (config.removeDockerEnviroment) {
-            await dockerController.clearEnviroment();
+            const qvfFiles = await this.getQlikApplicationFiles(name);
+            let successfullyCreatedEnv = await dockerController.createEnviroment(port, qvfFiles);
+            await delay(10000);
+
+            if (successfullyCreatedEnv) {
+                this.logger.trace("qvf's uploaded to docker container");
+                let res = await this.runTest(name, port);
+                this.logger.info(res.getResults())
+                result.push(res);
+            }
+
+            try {
+                await delay(1000);
+                await dockerController.copyLogFile();
+            } catch (error) {
+                this.logger.error("copy of log faild", error);
+            }
+
+            if (config.removeDockerEnviroment) {
+                await dockerController.clearEnviroment();
+            }
+
+            return result;
+
+        } catch (error) {
+            if (config.removeDockerEnviroment) {
+                await dockerController.clearEnviroment();
+            }
+            throw error;
+            ;
         }
-        return result;
     }
 
     //#endregion
@@ -183,30 +201,44 @@ export class TestController {
 
         let availableTests = await this.getAvailableTests(this.rootPath);
         this.logger.info(`${availableTests.length} tests found`);
-        let basePort: number = config.reportingEngineStartPort;
 
-        if (!config.runParallel) {
-            this.logger.trace("### run sync ###");
-            await (async () => {
-                for (const testName of availableTests) {
-                    this.results = this.results.concat(await this.run(basePort++, testName));
-                }
-            })();
-        } else {
-            this.logger.trace("### run async ###");
-            let a = await Promise.all(
-                availableTests.map(async (testName) => {
-                    return await this.run(basePort++, testName);
-                })
-            )
-            this.results = a.reduce((current, next) => current.concat(next), []);
+        try {
+            let basePort: number = config.reportingEngineStartPort;
+
+            if (!config.runParallel) {
+
+                this.logger.trace("### run sync ###");
+                await (async () => {
+                    for (const testName of availableTests) {
+                        this.results = this.results.concat(await this.run(basePort++, testName));
+                    }
+                })();
+
+            } else {
+
+                this.logger.trace("### run async ###");
+                let a = await Promise.all(
+                    availableTests.map(async (testName) => {
+                        return await this.run(basePort++, testName);
+                    })
+                )
+                this.results = a.reduce((current, next) => current.concat(next), []);
+
+            }
+
+            for (const result of this.results) {
+                this.logger.info(result.getResults());
+            }
+
+            clearInterval(interval);
+            this.logger.info("test finished");
+
+
+        } catch (error) {
+            clearInterval(interval);
+            this.logger.info("test finished");
         }
 
-        for (const result of this.results) {
-            this.logger.info(result.getResults());
-        }
-        clearInterval(interval);
-        this.logger.info("test finished");
         return;
     }
 

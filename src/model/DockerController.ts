@@ -294,9 +294,14 @@ export class DockerController {
         }
     }
 
-    public async init(): Promise<void> {
-        await this.createRestContainer();
-        return;
+    public async init(): Promise<boolean> {
+        try {
+            await this.createRestContainer();
+            return true;
+        } catch (error) {
+            this.logger.error("ERROR", error);
+            return false;
+        }
     }
 
     //#endregion
