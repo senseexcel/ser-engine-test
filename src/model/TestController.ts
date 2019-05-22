@@ -195,6 +195,9 @@ export class TestController {
 
     public async startTest() {
         this.logger.trace("in startTest");
+        if (!config.removeDockerEnviroment) {
+            this.logger.warn("docker enviroment will not be removed!!!");
+        }
         let interval;
         (async () => {
             interval = setInterval(() => {
