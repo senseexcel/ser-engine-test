@@ -171,6 +171,9 @@ export class TestController {
                 this.logger.error("copy of log faild", error);
             }
 
+            this.logger.trace("after copy log");
+            this.logger.trace("property value of removeDockerEnviroment: ", config.removeDockerEnviroment);
+
             if (config.removeDockerEnviroment) {
                 await dockerController.clearEnviroment();
             }
@@ -235,6 +238,7 @@ export class TestController {
 
 
         } catch (error) {
+            this.logger.error("error", error);
             clearInterval(interval);
             this.logger.info("test finished");
         }
