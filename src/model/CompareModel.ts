@@ -1,7 +1,7 @@
 import { getFilesFromType, loadFile } from "../lib/fileUtils";
 import { ITestError, ResultModel, ITestResult } from "./ResultModel";
 import { IConfig } from "./interfaces/IConfig";
-let config: IConfig = require("../config.json");
+let config: IConfig = require("../../config.json");
 
 interface IResult {
     name: string;

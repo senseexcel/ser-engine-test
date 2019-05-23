@@ -4,7 +4,7 @@ import { Logger, ELoglevel, ETransportType } from "../../node_modules/letslog/sr
 import { createGuid, delay } from "../lib/utils";
 import { IConfig } from "./interfaces/IConfig";
 
-let config: IConfig = require("../config.json");
+let config: IConfig = require("../../config.json");
 //#endregion
 
 export class DockerController {

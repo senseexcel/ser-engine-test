@@ -10,7 +10,7 @@ import { delay } from "../lib/utils";
 import { getFiles, removeAllFilesInFolder } from "../lib/fileUtils";
 import { CompareModel } from "./CompareModel";
 
-let config: IConfig = require("../config.json");
+let config: IConfig = require("../../config.json");
 //#endregion
 
 export class TestController {
@@ -231,6 +231,25 @@ export class TestController {
                 this.results = a.reduce((current, next) => current.concat(next), []);
 
             }
+
+            this.logger.info("");
+            this.logger.info("");
+            this.logger.info("###################################################");
+            this.logger.info("##                                               ##");
+            this.logger.info("##                    RESULTS                    ##");
+            this.logger.info("##                                               ##");
+            this.logger.info("##                     ##        .               ##");
+            this.logger.info("##               ## ## ##       ==               ##");
+            this.logger.info("##            ## ## ## ##      ===               ##");
+            this.logger.info('##         /""""""""""""""""\\___/ ===            ##');
+            this.logger.info("##    ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~     ##");
+            this.logger.info("##         \\______ o          __/                ##");
+            this.logger.info("##          \\    \\        __/                    ##");
+            this.logger.info("##           \\____\\______/                       ##");
+            this.logger.info("##                                               ##");
+            this.logger.info("###################################################");
+            this.logger.info("");
+            this.logger.info("");
 
             for (const result of this.results) {
                 this.logger.info(result.getResults());

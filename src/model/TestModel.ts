@@ -12,7 +12,7 @@ import { delay } from "../lib/utils";
 import { IFileResponse } from "./interfaces/IFileRspose";
 import * as AdmZip from "adm-zip";
 
-let config: IConfig = require("../config.json");
+let config: IConfig = require("../../config.json");
 //#endregion
 
 export class TestModel {
