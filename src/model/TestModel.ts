@@ -31,12 +31,12 @@ export class TestModel {
 
     constructor(testName: string, job: ISerConfig, resultModel: ResultModel) {
         
-        let logPath: string;
-        if (process.env.appdata) {
-            logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
-        } else {
-            logPath = config.logPath?config.logPath:"/var/log"
-        }
+        // let logPath: string;
+        // if (process.env.appdata) {
+        //     logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
+        // } else {
+        //     logPath = config.logPath?config.logPath:"/var/log"
+        // }
 
         this.logger = new Logger({
             loglvl: ELoglevel[config.loglevel],
