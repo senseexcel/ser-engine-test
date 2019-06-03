@@ -313,7 +313,7 @@ export class TestModel {
                 while (true) {
                     await delay(1000);
                     const results = await this.getTask(taskId);
-                    analyseResult = this.analyseResults(results)
+                    analyseResult = this.analyseResults(results);
                     if (!analyseResult.continue) {
                         if (analyseResult.errors.length > 0) {
                             const errorObject: ITestError = {
@@ -346,8 +346,16 @@ export class TestModel {
             }
             this.logger.trace("File saved");
 
+            const resultObject: ITestResult = {
+                expected: this.expectedResults,
+                recieved: this.recievedResults,
+                warning: analyseResult.warning,
+                name: `Count Result Test`
+            };
+            this.resultModel.addResult(resultObject);
+
         } catch (error) {
-            this.logger.error(error);
+            this.logger.error("Error in run", error);
             const errorObject: ITestError = {
                 name: "Run Error",
                 occurence: "TestModel - run",
@@ -356,13 +364,6 @@ export class TestModel {
             this.resultModel.addError(errorObject);
         }
 
-        const resultObject: ITestResult = {
-            expected: this.expectedResults,
-            recieved: this.recievedResults,
-            warning: analyseResult.warning,
-            name: `Count Result Test`
-        };
-        this.resultModel.addResult(resultObject);
         // this.logger.info(this.resultModel.getResults());
         return;
     }
