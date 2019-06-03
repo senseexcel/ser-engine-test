@@ -44,14 +44,6 @@ export class TestModel {
                 baseComment: "TestModel",
                 showLoglevel: true,
                 type: ETransportType.console
-            }, {
-                baseComment: `TestModel - ${testName}`,
-                logFileName: "log",
-                logpath: logPath,
-                type: ETransportType.filesystem,
-                showBaseComment: true,
-                // showDate: true,
-                showLoglevel: true
             }]
         })
 

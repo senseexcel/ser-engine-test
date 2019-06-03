@@ -35,14 +35,6 @@ export class TestController {
                 baseComment: "TestController",
                 showLoglevel: true,
                 type: ETransportType.console
-            }, {
-                baseComment: "TestController",
-                logFileName: "log",
-                logpath: logPath,
-                type: ETransportType.filesystem,
-                showBaseComment: true,
-                // showDate: true,
-                showLoglevel: true
             }]
         })
     }
