@@ -31,12 +31,12 @@ export class TestModel {
     //#endregion
 
     constructor(testName: string, job: ISerConfig, resultModel: ResultModel) {
-        
+
         let logPath: string;
         if (process.env.appdata) {
-            logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
+            logPath = config.logPath ? config.logPath : "%appdata%/tf_log/ReportingTestTool"
         } else {
-            logPath = config.logPath?config.logPath:"/var/log"
+            logPath = config.logPath ? config.logPath : "/var/log"
         }
 
         this.logger = new Logger({
@@ -250,25 +250,31 @@ export class TestModel {
         if (results.length === 0) {
             analyseResult.continue = true;
         }
+        try {
 
-        for (const result of results) {
-            if (isNullOrUndefined(result)) {
-                analyseResult.continue = true;
+            for (const result of results) {
+                if (isNullOrUndefined(result)) {
+                    analyseResult.continue = true;
+                } else {
+                    if (result.status === "ABORT") {
+                        analyseResult.continue = true;
+                    }
+                    if (result.status === "ERROR" || result.status === "RETRYERROR") {
+                        analyseResult.errors.push(`${result.status} in Task: ${result.taskId}`);
+                    }
+                    if (result.status === "SUCCESS") {
+                        analyseResult.reports = analyseResult.reports.concat(result.reports);
+                    }
+                    if (result.status === "WARNING") {
+                        analyseResult.warning = true;
+                        analyseResult.reports = analyseResult.reports.concat(result.reports);
+                    }
+                }
+
+                analyseResult.countReports += result.count;
             }
-            if (result.status === "ABORT") {
-                analyseResult.continue = true;
-            }
-            if (result.status === "ERROR" || result.status === "RETRYERROR") {
-                analyseResult.errors.push(`${result.status} in Task: ${result.taskId}`);
-            }
-            if (result.status === "SUCCESS") {
-                analyseResult.reports = analyseResult.reports.concat(result.reports);
-            }
-            if (result.status === "WARNING") {
-                analyseResult.warning = true;
-                analyseResult.reports = analyseResult.reports.concat(result.reports);
-            }
-            analyseResult.countReports += result.count;
+        } catch (error) {
+            throw "result.status errors";            
         }
 
         return analyseResult;
