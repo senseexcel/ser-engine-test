@@ -23,12 +23,12 @@ export class DockerController {
 
     constructor(testPath: string) {
 
-        // let logPath: string;
-        // if (process.env.appdata) {
-        //     logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
-        // } else {
-        //     logPath = config.logPath?config.logPath:"/var/log"
-        // }
+        let logPath: string;
+        if (process.env.appdata) {
+            logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
+        } else {
+            logPath = config.logPath?config.logPath:"/var/log"
+        }
 
         this.logger = new Logger({
             loglvl: ELoglevel[config.loglevel],
@@ -36,6 +36,15 @@ export class DockerController {
                 baseComment: "TestController",
                 showLoglevel: true,
                 type: ETransportType.console
+            }
+            , {
+                baseComment: `TestMoDockerControllerdel - ${testPath}`,
+                logFileName: "log",
+                logpath: logPath,
+                type: ETransportType.filesystem,
+                showBaseComment: true,
+                showDate: true,
+                showLoglevel: true
             }]
         });
         this.testPath = testPath;

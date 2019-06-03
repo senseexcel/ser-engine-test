@@ -22,13 +22,12 @@ export class TestController {
     //#endregion
 
     constructor() {
-
-        // let logPath: string;
-        // if (process.env.appdata) {
-        //     logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
-        // } else {
-        //     logPath = config.logPath?config.logPath:"/var/log"
-        // }
+        let logPath: string;
+        if (process.env.appdata) {
+            logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
+        } else {
+            logPath = config.logPath?config.logPath:"/var/log"
+        }
 
         this.logger = new Logger({
             loglvl: ELoglevel[config.loglevel],
@@ -36,6 +35,14 @@ export class TestController {
                 baseComment: "TestController",
                 showLoglevel: true,
                 type: ETransportType.console
+            }, {
+                baseComment: "TestController",
+                logFileName: "log",
+                logpath: logPath,
+                type: ETransportType.filesystem,
+                showBaseComment: true,
+                showDate: true,
+                showLoglevel: true
             }]
         })
     }
