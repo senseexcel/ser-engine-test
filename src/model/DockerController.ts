@@ -36,13 +36,14 @@ export class DockerController {
                 baseComment: "TestController",
                 showLoglevel: true,
                 type: ETransportType.console
-            }, {
+            }
+            , {
                 baseComment: `TestMoDockerControllerdel - ${testPath}`,
                 logFileName: "log",
                 logpath: logPath,
                 type: ETransportType.filesystem,
                 showBaseComment: true,
-                showDate: true,
+                // showDate: true,
                 showLoglevel: true
             }]
         });

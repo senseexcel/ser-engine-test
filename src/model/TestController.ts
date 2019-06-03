@@ -41,7 +41,7 @@ export class TestController {
                 logpath: logPath,
                 type: ETransportType.filesystem,
                 showBaseComment: true,
-                showDate: true,
+                // showDate: true,
                 showLoglevel: true
             }]
         })
