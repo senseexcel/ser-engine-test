@@ -10,4 +10,5 @@ export interface IConfig {
     useLocalRest: boolean;
     enginePath: string;
     cpuCount: number;
+    logPath: string;
 }

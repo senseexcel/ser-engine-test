@@ -22,6 +22,14 @@ export class DockerController {
     //#endregion
 
     constructor(testPath: string) {
+
+        let logPath: string;
+        if (process.env.appdata) {
+            logPath = config.logPath?config.logPath:"%appdata%/tf_log/ReportingTestTool"
+        } else {
+            logPath = config.logPath?config.logPath:"/var/log"
+        }
+
         this.logger = new Logger({
             loglvl: ELoglevel[config.loglevel],
             transports: [{
@@ -31,7 +39,7 @@ export class DockerController {
             }, {
                 baseComment: `TestMoDockerControllerdel - ${testPath}`,
                 logFileName: "log",
-                logpath: "%appdata%/tf_log/ReportingTestTool",
+                logpath: logPath,
                 type: ETransportType.filesystem,
                 showBaseComment: true,
                 showDate: true,
