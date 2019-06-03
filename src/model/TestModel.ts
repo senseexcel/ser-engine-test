@@ -11,6 +11,7 @@ import { IConfig } from "./interfaces/IConfig";
 import { delay } from "../lib/utils";
 import { IFileResponse } from "./interfaces/IFileRspose";
 import * as AdmZip from "adm-zip";
+import { isNullOrUndefined } from "util";
 
 let config: IConfig = require("../../config.json");
 //#endregion
@@ -251,6 +252,9 @@ export class TestModel {
         }
 
         for (const result of results) {
+            if (isNullOrUndefined(result)) {
+                analyseResult.continue = true;
+            }
             if (result.status === "ABORT") {
                 analyseResult.continue = true;
             }
