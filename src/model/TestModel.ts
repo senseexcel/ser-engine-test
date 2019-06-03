@@ -36,6 +36,14 @@ export class TestModel {
                 baseComment: "TestModel",
                 showLoglevel: true,
                 type: ETransportType.console
+            }, {
+                baseComment: `TestModel - ${testName}`,
+                logFileName: "log",
+                logpath: "%appdata%/tf_log/ReportingTestTool",
+                type: ETransportType.filesystem,
+                showBaseComment: true,
+                showDate: true,
+                showLoglevel: true
             }]
         })
 

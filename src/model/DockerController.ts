@@ -28,6 +28,14 @@ export class DockerController {
                 baseComment: "TestController",
                 showLoglevel: true,
                 type: ETransportType.console
+            }, {
+                baseComment: `TestMoDockerControllerdel - ${testPath}`,
+                logFileName: "log",
+                logpath: "%appdata%/tf_log/ReportingTestTool",
+                type: ETransportType.filesystem,
+                showBaseComment: true,
+                showDate: true,
+                showLoglevel: true
             }]
         });
         this.testPath = testPath;
