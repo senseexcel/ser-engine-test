@@ -9,5 +9,6 @@
     "testPath": "./assets",
     "useLocalRest": true,
     "enginePath": "./src/assets/engine/",
-    "cpuCount": 1
+    "cpuCount": 1,
+    "logPath": "%appdata%/reportinglog"
 }

@@ -57,7 +57,16 @@ export class TestController {
                 return availableTests;
             }
             const relevantTests = availableTests.filter((current) => {
-                return config.tests.indexOf(current) > -1 ? true : false;
+
+                let res = false;
+
+                for (const test of config.tests) {
+                    if (test.substr(0, 2) === current.substr(0,2)) {
+                        res = true;
+                    }
+                }
+
+                return res;
             })
             return relevantTests;
         } catch (error) {
@@ -213,6 +222,7 @@ export class TestController {
         if (!config.removeDockerEnviroment) {
             this.logger.warn("docker enviroment will not be removed!!!");
         }
+
         let interval;
         (async () => {
             interval = setInterval(() => {
