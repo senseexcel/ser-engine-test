@@ -194,6 +194,9 @@ export class TestModel {
                 try {
                     this.logger.trace("Body: ", body);
                     response = JSON.parse(body);
+                    if (isNullOrUndefined(response.results[0])) {
+                        this.logger.warn("null results recieved");
+                    }
                 } catch (error) {
                     this.logger.debug(error);
                     reject("Error in getTask: problems while parse body");
@@ -274,7 +277,7 @@ export class TestModel {
                 analyseResult.countReports += result.count;
             }
         } catch (error) {
-            throw "result.status errors";            
+            throw "result.status errors";
         }
 
         return analyseResult;
@@ -312,18 +315,22 @@ export class TestModel {
             await (async () => {
                 while (true) {
                     await delay(1000);
-                    const results = await this.getTask(taskId);
-                    analyseResult = this.analyseResults(results);
-                    if (!analyseResult.continue) {
-                        if (analyseResult.errors.length > 0) {
-                            const errorObject: ITestError = {
-                                name: "Analyse Error",
-                                occurence: "TestModel - run",
-                                msg: analyseResult.errors.join("\n")
+                    try {
+                        const results = await this.getTask(taskId);
+                        analyseResult = this.analyseResults(results);
+                        if (!analyseResult.continue) {
+                            if (analyseResult.errors.length > 0) {
+                                const errorObject: ITestError = {
+                                    name: "Analyse Error",
+                                    occurence: "TestModel - run",
+                                    msg: analyseResult.errors.join("\n")
+                                }
+                                this.resultModel.addError(errorObject);
                             }
-                            this.resultModel.addError(errorObject);
+                            break;
                         }
-                        break;
+                    } catch (error) {
+                        this.logger.warn("error while getTask", error);
                     }
                 }
             })();
