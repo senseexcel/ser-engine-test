@@ -1,3 +1,6 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d4e410ee6b0f42afb6e9ddcf52bfd5b0)](https://www.codacy.com/app/thomashaenig/ser-engine-test?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=senseexcel/ser-engine-test&amp;utm_campaign=Badge_Grade)
+
+
 # ser-engien-test
 
 run automated test for sense excel reporting in separated started docker enviroments to ensure to have no side effects in between the tests.
