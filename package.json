@@ -5,13 +5,18 @@
     "devDependencies": {
         "typescript": "3.1.4",
         "@types/request": " 2.48.1",
-        "@types/adm-zip": "0.4.32"
+        "@types/adm-zip": "0.4.32",
+        "@types/enigma.js": "2.2.1",
+        "@types/qlik-engineapi": "12.67.0",
+        "@types/ws": "4.0.1"
     },
     "dependencies": {
         "request": "2.88.0",
         "ser.api": "3.4.2",
         "letslog": "1.0.10",
-        "adm-zip": "0.4.13"
+        "adm-zip": "0.4.13",
+        "enigma.js": "2.2.0",
+        "ws": "4.1.0"
     },
     "scripts": {
         "start": "tsc && node src/index"

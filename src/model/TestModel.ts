@@ -1,7 +1,7 @@
 //#region IMPORTS
 import { post, get } from "request";
 import { readdir, writeFileSync } from "fs";
-import { ISerConfig } from "../../node_modules/ser.api/index";
+import { ISerConfig, ISerReport, ISerSenseSelection } from "../../node_modules/ser.api/index";
 import { ResultModel, ITestError, ITestInfo, ITestResult } from "./ResultModel";
 import { Logger, ELoglevel, ETransportType } from "../../node_modules/letslog/src/index";
 import { IAnalyseResults } from "./interfaces/IAnalyseResults";
@@ -12,8 +12,11 @@ import { delay } from "../lib/utils";
 import { IFileResponse } from "./interfaces/IFileRspose";
 import * as AdmZip from "adm-zip";
 import { isNullOrUndefined } from "util";
+import * as websocket from "ws";
+import * as enigmajs from "enigma.js";
 
 let config: IConfig = require("../../config.json");
+let schema = require("../../node_modules/enigma.js/schemas/12.34.11.json");
 //#endregion
 
 export class TestModel {
@@ -61,11 +64,18 @@ export class TestModel {
         this.templatePath = `${config.testPath}/${testName}/`;
         this.resultModel = resultModel;
 
+
+
+
+
         try {
             for (const key in job.tasks) {
                 if (job.tasks.hasOwnProperty(key)) {
                     const task = job.tasks[key];
                     for (const key in task.reports) {
+
+                        this.getDynCount(task.reports[key])
+
                         if (task.reports.hasOwnProperty(key)) {
                             this.expectedResults++;
                         }
@@ -85,6 +95,74 @@ export class TestModel {
 
     //#region PRIVATE VARIABLES
 
+    private async getDynCount(report: ISerReport): Promise<number> {
+        const staticFilters = report.template.selections.filter(value => value.type.toString() === "static")
+        const dynamicFilters = report.template.selections.filter(value => value.type.toString() === "dynamic")
+
+        if (dynamicFilters.length === 0) {
+            return 0
+        }
+
+        const configQlik = await this.getConfigToDesktop();
+        const session = enigmajs.create(configQlik);
+        const global = await session.open();
+        const app = await (global as EngineAPI.IGlobal).openDoc(report.connections[0].app)
+
+
+        await this.setStaticFilter(staticFilters, app);
+
+        if (dynamicFilters[0].values && dynamicFilters[0].values.length > 0) {
+            await this.setDynamicFilter(staticFilters[0], app);
+        }
+
+        return null
+
+    }
+
+    private async setDynamicFilter(staticFilters: ISerSenseSelection, app: EngineAPI.IApp): Promise<void> {
+        const field = await app.getField(staticFilters.name)
+        await staticFilters.values.forEach(async (value) => {
+            await field. select(value);
+        })
+        return;
+    }
+
+
+    private async setStaticFilter(staticFilters: ISerSenseSelection[], app: EngineAPI.IApp): Promise<void> {
+        if (staticFilters.length === 0) {
+            return;
+        }
+
+        let currentFilter = staticFilters[0];
+        let newFilters = staticFilters.slice(1);
+
+        const field = await app.getField(currentFilter.name);
+        await currentFilter.values.forEach(async (value) => {
+            await field.select(value);
+        });
+
+        await this.setStaticFilter(newFilters, app);
+
+    }
+
+    private getConfigToDesktop(): Promise<enigmaJS.IConfig> {
+        this.logger.trace("getConfigToDesktop");
+
+        return new Promise((resolve, reject) => {
+            try {
+                const serverConfig = {
+                    schema: schema,
+                    url: "ws://localhost:9076/app/engineData",
+                    createSocket: url => new websocket(url)
+                }
+                resolve(serverConfig);
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+    }
+
     private async loadFileAsZip(): Promise<Buffer> {
         return new Promise<Buffer>((resolve, reject) => {
             let zip = new AdmZip();
@@ -95,7 +173,7 @@ export class TestModel {
                     return;
                 }
                 for (const file of files) {
-                    if (file.indexOf("\.xlsx") > 0 || file.indexOf("\.ttf") > 0 || file.indexOf("\.key") > 0) {
+                    if (file.indexOf("\.xlsx") > 0 || file.indexOf("\.ttf") > 0 || file.indexOf("\.key") > 0 || file.indexOf("\.xlsb") > 0 ) {
                         try {
                             zip.addLocalFile(`${this.templatePath}${file}`);
                         } catch (error) {
@@ -158,6 +236,7 @@ export class TestModel {
             }
             let req = post(`http://localhost:${this.port}/api/v1/task`, options, (err, res, body) => {
                 if (err || !body) {
+		    console.log(err);
                     this.logger.debug(err);
                     reject("Error in: POST - /api/v1/task");
                     return;
@@ -176,7 +255,7 @@ export class TestModel {
                 }
                 resolve(response.operationId);
             });
-            req.body = JSON.stringify(serJson);
+	    req.body = '"' + JSON.stringify(serJson).replace(/"/g, '\\"')+ '"';
             req.timeout = this.responseTimeout;
         });
     }
