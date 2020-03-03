@@ -63,70 +63,80 @@ export class TestModel {
         this.testName = testName;
         this.templatePath = `${config.testPath}/${testName}/`;
         this.resultModel = resultModel;
-
-
-
-
-
-        try {
-            for (const key in job.tasks) {
-                if (job.tasks.hasOwnProperty(key)) {
-                    const task = job.tasks[key];
-                    for (const key in task.reports) {
-
-                        this.getDynCount(task.reports[key])
-
-                        if (task.reports.hasOwnProperty(key)) {
-                            this.expectedResults++;
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            this.logger.debug(error);
-            const errorObject: ITestError = {
-                name: "Expectet Result Count Error",
-                occurence: "TestModel - contructor",
-                msg: "error while calculating expected results"
-            }
-            this.resultModel.addError(errorObject);
-        }
     }
 
     //#region PRIVATE VARIABLES
 
     private async getDynCount(report: ISerReport): Promise<number> {
+        if (typeof(report.template.selections) === "undefined") {
+            return 0
+        }
         const staticFilters = report.template.selections.filter(value => value.type.toString() === "static")
         const dynamicFilters = report.template.selections.filter(value => value.type.toString() === "dynamic")
+        let count = 0
 
         if (dynamicFilters.length === 0) {
             return 0
         }
-
         const configQlik = await this.getConfigToDesktop();
         const session = enigmajs.create(configQlik);
-        const global = await session.open();
-        const app = await (global as EngineAPI.IGlobal).openDoc(report.connections[0].app)
+        try {
+            const global = await session.open();
+            const app = await (global as EngineAPI.IGlobal).openDoc(report.connections[0].app)
 
+            await this.setStaticFilter(staticFilters, app);
 
-        await this.setStaticFilter(staticFilters, app);
+            if (dynamicFilters[0].values && dynamicFilters[0].values.length > 0) {
+                await this.setDynamicFilter(dynamicFilters[0], app);
+            }
 
-        if (dynamicFilters[0].values && dynamicFilters[0].values.length > 0) {
-            await this.setDynamicFilter(staticFilters[0], app);
+            var parameter: EngineAPI.IGenericObjectProperties = {
+                "qInfo": {
+                    "qType": "ListObject"
+                },
+                "qListObjectDef": {
+                    "qDef": {
+                        "qFieldDefs": [`${dynamicFilters[0].name}`],
+                        "qGrouping": "N",
+                        "autoSort": false,
+                        "qActiveField": 0,
+                        "qFieldLabels": [`${dynamicFilters[0].name}`]
+                    },
+                    "qShowAlternatives": true,
+                    "qInitialDataFetch": [
+                        {
+                            "qTop": 0,
+                            "qLeft": 0,
+                            "qHeight": 0,
+                            "qWidth": 0
+                        }
+                    ]
+                }
+            };
+
+            const sessionObject = await app.createSessionObject(parameter)
+            const layout = await sessionObject.getLayout();
+            count = (layout as EngineAPI.IGenericListLayout).qListObject.qDimensionInfo.qStateCounts.qSelected;
+            if (count === 0) {
+                count = (layout as EngineAPI.IGenericListLayout).qListObject.qDimensionInfo.qStateCounts.qOption;
+            }
+        } catch (error) {
+            this.logger.error("ERROR", error);
         }
 
-        return null
+        return count
 
     }
 
-    private async setDynamicFilter(staticFilters: ISerSenseSelection, app: EngineAPI.IApp): Promise<void> {
-        const field = await app.getField(staticFilters.name)
-        await staticFilters.values.forEach(async (value) => {
-            await field. select(value);
+    private async setDynamicFilter(dynamicFilter: ISerSenseSelection, app: EngineAPI.IApp): Promise<void> {
+        const field = await app.getField(dynamicFilter.name)
+        let count = await field.getCardinal();
+        await dynamicFilter.values.forEach(async (value) => {
+            await field. toggleSelect(value);
+            let count = await field.getCardinal();
         })
         return;
     }
-
 
     private async setStaticFilter(staticFilters: ISerSenseSelection[], app: EngineAPI.IApp): Promise<void> {
         if (staticFilters.length === 0) {
@@ -138,7 +148,7 @@ export class TestModel {
 
         const field = await app.getField(currentFilter.name);
         await currentFilter.values.forEach(async (value) => {
-            await field.select(value);
+            await field.toggleSelect(value);
         });
 
         await this.setStaticFilter(newFilters, app);
@@ -383,6 +393,28 @@ export class TestModel {
             // include a delay, so the server can unzip the sended file
             await delay(1000);
 
+            try {
+                for (const key in this.job.tasks) {
+                    if (this.job.tasks.hasOwnProperty(key)) {
+                        const task = this.job.tasks[key];
+                        for (const key in task.reports) {
+                            if (task.reports.hasOwnProperty(key)) {
+                                let a = task.reports[key]
+                                let b = await this.getDynCount(a)
+                                if (b === 0) {
+                                    this.expectedResults++;
+                                } else {
+                                    this.expectedResults += b;
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                this.logger.error("error", error);
+            }
+
             const taskId = await this.postTask(fileId);
             infoObject = {
                 name: "Task Id",
@@ -449,11 +481,8 @@ export class TestModel {
             }
             this.resultModel.addError(errorObject);
         }
-
-        // this.logger.info(this.resultModel.getResults());
         return;
     }
-
     //#endregion
 
 }

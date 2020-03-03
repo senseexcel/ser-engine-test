@@ -82,7 +82,7 @@ export class DockerController {
         });
     }
 
-    private async createQlikContainer(): Promise<void> {
+    private async createQlikContainer(i: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const name = `ser-qlik-container-${createGuid()}`;
             this.logger.debug("Create Qlik Container Name: ", name);
@@ -93,6 +93,7 @@ export class DockerController {
                 `--network ${this.networkName}`,
                 `--name ${name}`,
                 `--cpus="1"`,
+                `-p ${9076+i}:9076`,
                 config.qlikEngineContainer,
                 "-S DocumentDirectory=/apps -S AcceptEULA=yes -S SessionLogVerbosity=5"];
 
@@ -264,7 +265,7 @@ export class DockerController {
 
             let a: Promise<void>[] = []
             for (let i = 0; i < this.qlikContainerCount; i++) {
-                a.push(this.createQlikContainer())
+                a.push(this.createQlikContainer(i))
             };
             a.push(this.createSERContainer(port));
             await Promise.all(a);
