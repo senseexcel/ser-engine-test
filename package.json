@@ -13,7 +13,7 @@
     "dependencies": {
         "request": "2.88.0",
         "ser.api": "3.4.2",
-        "letslog": "1.0.10",
+        "letslog": "1.0.12",
         "adm-zip": "0.4.13",
         "enigma.js": "2.2.0",
         "ws": "4.1.0"
