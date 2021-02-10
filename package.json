@@ -8,7 +8,8 @@
         "@types/adm-zip": "0.4.32",
         "@types/enigma.js": "2.2.1",
         "@types/qlik-engineapi": "12.67.0",
-        "@types/ws": "4.0.1"
+        "@types/ws": "4.0.1",
+        "@types/form-data": "2.5.0"
     },
     "dependencies": {
         "request": "2.88.0",
@@ -16,7 +17,8 @@
         "letslog": "1.0.10",
         "adm-zip": "0.4.13",
         "enigma.js": "2.2.0",
-        "ws": "4.1.0"
+        "ws": "4.1.0",
+        "form-data":"3.0.0"
     },
     "scripts": {
         "start": "tsc && node src/index"

@@ -1,19 +1,20 @@
 //#region IMPORTS
 import { post, get } from "request";
-import { readdir, writeFileSync } from "fs";
+import { readdir, writeFileSync, createReadStream, renameSync } from "fs";
 import { ISerConfig, ISerReport, ISerSenseSelection } from "../../node_modules/ser.api/index";
 import { ResultModel, ITestError, ITestInfo, ITestResult } from "./ResultModel";
 import { Logger, ELoglevel, ETransportType } from "../../node_modules/letslog/src/index";
 import { IAnalyseResults } from "./interfaces/IAnalyseResults";
-import { IResponse } from "./interfaces/IResponse";
 import { IResult } from "./interfaces/IResult";
 import { IConfig } from "./interfaces/IConfig";
 import { delay } from "../lib/utils";
 import { IFileResponse } from "./interfaces/IFileRspose";
 import * as AdmZip from "adm-zip";
-import { isNullOrUndefined } from "util";
 import * as websocket from "ws";
 import * as enigmajs from "enigma.js";
+import * as url from "url";
+import * as FormData from 'form-data';
+import { request } from 'http';
 
 let config: IConfig = require("../../config.json");
 let schema = require("../../node_modules/enigma.js/schemas/12.34.11.json");
@@ -61,7 +62,7 @@ export class TestModel {
 
         this.job = job;
         this.testName = testName;
-        this.templatePath = `${config.testPath}/${testName}/`;
+        this.templatePath = `${config.testPath}${testName}/`;
         this.resultModel = resultModel;
     }
 
@@ -173,8 +174,8 @@ export class TestModel {
 
     }
 
-    private async loadFileAsZip(): Promise<Buffer> {
-        return new Promise<Buffer>((resolve, reject) => {
+    private async loadFileAsZip(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
             let zip = new AdmZip();
             readdir(this.templatePath, (err, files) => {
                 if (err) {
@@ -193,44 +194,48 @@ export class TestModel {
                         }
                     }
                 }
-                resolve(zip.toBuffer());
+                zip.writeZip(`${this.templatePath}temp.zip`, () => {
+                    resolve(`${this.templatePath}temp.zip`);
+                })
+                
             });
         })
     }
 
-    private async postFile(data: Buffer): Promise<string> {
+    private async postFile(file: any): Promise<string> {
         this.logger.trace("in postFile");
         return new Promise<string>((resolve, reject) => {
-            let options = {
-                headers: {
-                    "filename": "upload.zip",
-                    "unzip": true,
-                    "Content-Type": "application/octet-stream"
-                }
+
+            try {
+                
+                this.logger.debug("post file ", `http://localhost:${this.port}/upload`);
+                const form = new FormData();
+                form.append('file', file);
+
+
+                const req = request(
+                    {
+                        host: 'localhost',
+                        port: this.port,
+                        path: '/upload',
+                        method: 'POST',
+                        headers: form.getHeaders(),
+                    },
+                    response => {
+
+                        response.on("data", (data) => {
+                            this.logger.debug("post file", `http://localhost:${this.port}/upload: `, JSON.parse(data.toString()));
+                            
+                            resolve(JSON.parse(data.toString()));
+                        })
+
+                    }
+                );
+                form.pipe(req);
+
+            } catch(error) {
+                reject(error)
             }
-            this.logger.debug("post file", `http://localhost:${this.port}/api/v1/file`);
-            let req = post(`http://localhost:${this.port}/api/v1/file`, options, (err, res, body) => {
-                if (err || !body) {
-                    this.logger.debug(err);
-                    reject("Error in: POST - /api/v1/file");
-                    return;
-                }
-                let response: IResponse = null;
-                try {
-                    response = JSON.parse(body);
-                } catch (error) {
-                    this.logger.debug(error);
-                    reject("Erroi in postFile: problems while parse body");
-                    return;
-                }
-                if (!response.success) {
-                    reject("Error in: POST - /api/v1/file - response was not successfull");
-                    return;
-                }
-                resolve(response.operationId);
-            });
-            req.body = data;
-            req.timeout = this.responseTimeout;
         });
     }
 
@@ -244,28 +249,23 @@ export class TestModel {
                     "Content-Type": "application/json"
                 }
             }
-            let req = post(`http://localhost:${this.port}/api/v1/task`, options, (err, res, body) => {
+            let req = post(`http://localhost:${this.port}/task`, options, (err, res, body) => {
                 if (err || !body) {
-		    console.log(err);
                     this.logger.debug(err);
-                    reject("Error in: POST - /api/v1/task");
+                    reject("Error in: POST - /task");
                     return;
                 }
-                let response: IResponse = null;
+                let response = null;
                 try {
                     response = JSON.parse(body);
                 } catch (error) {
                     this.logger.debug(error);
-                    reject("Erroi in postTask: problems while parse body");
+                    reject("Error in postTask: problems while parse body");
                     return;
                 }
-                if (!response.success) {
-                    reject("Error in: POST - /api/v1/task - response was not successfull");
-                    return;
-                }
-                resolve(response.operationId);
+                resolve(response);
             });
-	    req.body = '"' + JSON.stringify(serJson).replace(/"/g, '\\"')+ '"';
+            req.body = '"' + JSON.stringify(serJson).replace(/"/g, '\\"')+ '"';
             req.timeout = this.responseTimeout;
         });
     }
@@ -273,17 +273,17 @@ export class TestModel {
     private async getTask(id): Promise<IResult[]> {
         this.logger.trace("in getTask");
         return new Promise<IResult[]>((resolve, reject) => {
-            let req = get(`http://localhost:${this.port}/api/v1/task/${id}`, (err, res, body) => {
+            let req = get(`http://localhost:${this.port}/task/${id}`, (err, res, body) => {
                 if (err || !body) {
                     this.logger.debug(err);
-                    reject("Error in: GET - /api/v1/task");
+                    reject("Error in: GET - /task");
                     return;
                 }
-                let response: IResponse = null;
+                let response: IResult[] = null;
                 try {
                     this.logger.trace("Body: ", body);
-                    response = JSON.parse(body);
-                    if (isNullOrUndefined(response.results[0])) {
+                    response = JSON.parse(JSON.parse(body));                    
+                    if (response === null || response === undefined) {
                         this.logger.warn("null results recieved");
                     }
                 } catch (error) {
@@ -291,25 +291,16 @@ export class TestModel {
                     reject("Error in getTask: problems while parse body");
                     return;
                 }
-                if (!response.success) {
-                    reject("Error in: GET - /api/v1/task - response was not successfull");
-                    return;
-                }
-                resolve(response.results);
+                resolve(response);
             });
             req.timeout = this.responseTimeout;
         });
     }
 
-    private async getFile(id: string, filename: string, name: string): Promise<IFileResponse> {
+    private async getFile(id: string): Promise<IFileResponse> {
         this.logger.trace("in getFile");
         return new Promise<IFileResponse>((resolve, reject) => {
-            let options = {
-                headers: {
-                    "filename": filename
-                }
-            }
-            let req = get(`http://localhost:${this.port}/api/v1/file/${id}`, options);
+            let req = get(`http://localhost:${this.port}/download/${id}`);
             let bufferArray = [];
             req.on("data", (res: Buffer) => {
                 bufferArray.push(res);
@@ -317,7 +308,7 @@ export class TestModel {
             req.on("complete", () => {
                 resolve({
                     buffer: Buffer.concat(bufferArray),
-                    name: `${name}.${filename.split(".").slice(-1)[0]}`
+                    name: `output.zip`
                 });
             })
             req.on("error", (err) => {
@@ -329,7 +320,8 @@ export class TestModel {
     }
 
     private analyseResults(results: IResult[]): IAnalyseResults {
-        this.logger.trace("in analyseResults");
+        this.logger.trace("in analyseResults: ", results);
+
 
         let analyseResult: IAnalyseResults = {
             continue: false,
@@ -345,7 +337,8 @@ export class TestModel {
         try {
 
             for (const result of results) {
-                if (isNullOrUndefined(result)) {
+
+                if (result === null || result === undefined) {
                     analyseResult.continue = true;
                 } else {
                     if (result.status === "ABORT") {
@@ -382,7 +375,8 @@ export class TestModel {
         try {
             let zipBuffer = await this.loadFileAsZip();
 
-            let fileId = await this.postFile(zipBuffer)
+            const readStream = createReadStream(zipBuffer);
+            let fileId = await this.postFile(readStream);
             this.logger.trace("fileIds: ", fileId);
             let infoObject: ITestInfo = {
                 name: "File Id",
@@ -447,21 +441,50 @@ export class TestModel {
             })();
             this.logger.trace("task finished", analyseResult);
             this.recievedResults = analyseResult.countReports;
-            let arr = []
+
+            const outzip = await this.getFile(taskId)
+            writeFileSync(`${config.testPath}/${this.testName}/output/${outzip.name}`, outzip.buffer);
+
+            var zip = new AdmZip(`${config.testPath}/${this.testName}/output/${outzip.name}`);
+            var zipEntries = zip.getEntries(); // an array of ZipEntry records
+
+            zip.extractAllTo(`${config.testPath}/${this.testName}/output/`, true);
+
+            
             for (const report of analyseResult.reports) {
                 let count = 0;
                 for (const path of report.paths) {
                     let filename = path.split("/").pop();
-                    arr.push(await this.getFile(taskId, filename, `${count}_${report.name}`));
+                    let assistArr = filename.split(".");
+                    let format = assistArr[assistArr.length-1]
+
+                    renameSync(
+                        `${config.testPath}/${this.testName}/output/${filename}`, 
+                        `${config.testPath}/${this.testName}/output/${count}_${report.name}.${format}`
+                    )
+
                     count++;
                 }
             }
 
-            let fileResponses: IFileResponse[] = await Promise.all(arr);
 
-            for (const fileResponse of fileResponses) {
-                writeFileSync(`${config.testPath}/${this.testName}/output/${fileResponse.name}`, fileResponse.buffer);
-            }
+            // TODO
+
+            // let arr = []
+            // for (const report of analyseResult.reports) {
+            //     let count = 0;
+            //     for (const path of report.paths) {
+            //         let filename = path.split("/").pop();
+            //         arr.push(await this.getFile(taskId, filename, `${count}_${report.name}`));
+            //         count++;
+            //     }
+            // }
+
+            // let fileResponses: IFileResponse[] = await Promise.all(arr);
+
+            // for (const fileResponse of fileResponses) {
+            //     writeFileSync(`${config.testPath}/${this.testName}/output/${fileResponse.name}`, fileResponse.buffer);
+            // }
             this.logger.trace("File saved");
 
             const resultObject: ITestResult = {
