@@ -1,4 +1,4 @@
-import { readdir, PathLike, readFile, unlinkSync,  } from "fs";
+import { readdir, PathLike, readFile, unlinkSync, rmdirSync } from "fs";
 
 export async function getFiles(path: PathLike): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
@@ -38,7 +38,21 @@ export async function removeAllFilesInFolder(path: string): Promise<void> {
     let files = await getFiles(path);
     for (const file of files) {
         try {
-            unlinkSync(`${path}/${file}`);
+
+            if (file === "JobResults") {
+                let assist = await getFiles(`${path}/${file}`)
+                for (const fileassist of assist) {
+                    try {
+                        unlinkSync(`${path}/${file}/${fileassist}`);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+                rmdirSync(`${path}/${file}`);
+            } else {
+                unlinkSync(`${path}/${file}`);
+            }
+
         } catch (error) {
             console.error(error);
         }
