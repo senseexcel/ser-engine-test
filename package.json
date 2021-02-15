@@ -18,7 +18,7 @@
         "adm-zip": "0.4.13",
         "enigma.js": "2.2.0",
         "ws": "4.1.0",
-        "form-data":"3.0.0"
+        "form-data":"3.0.1"
     },
     "scripts": {
         "start": "tsc && node src/index"
