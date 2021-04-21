@@ -238,7 +238,8 @@ export class DockerController {
     public async copyLogFile(): Promise<void> {
         this.logger.debug("Copy log from ser");
         return new Promise<void>((resolve, reject) => {
-            exec(`docker container cp ${this.serContainerName}:/root/senseexcel/ser-engine-rest/ser-engine-rest-reporting.log ${this.testPath}/output/`, (err) => {
+            exec(`docker container cp ${this.serContainerName}:/root/AnalyticsGate/AGR/agr-engine-rest/AnalyticsGateRestService.log ${this.testPath}/output/`, (err) => {
+            // exec(`docker container cp ${this.serContainerName}:/root/senseexcel/ser-engine-rest/ser-engine-rest-reporting.log ${this.testPath}/output/`, (err) => {
                 if (err) {
                     this.logger.debug(err);
                     reject(err);
