@@ -9,7 +9,7 @@
         "@types/enigma.js": "2.2.1",
         "@types/qlik-engineapi": "12.67.0",
         "@types/ws": "4.0.1",
-        "@types/form-data": "2.5.0"
+        "@types/form-data": "2.5.2"
     },
     "dependencies": {
         "request": "2.88.0",
