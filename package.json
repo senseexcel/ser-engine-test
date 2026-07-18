@@ -11,7 +11,7 @@
         "request": "2.88.0",
         "ser.api": "3.4.2",
         "letslog": "1.0.10",
-        "adm-zip": "0.4.13"
+        "adm-zip": "0.6.0"
     },
     "scripts": {
         "start": "tsc && node src/index"
